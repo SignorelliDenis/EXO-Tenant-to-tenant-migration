@@ -5,11 +5,11 @@
 	Date: 2021.01.22
 	Authors: Denis Vilaca Signorelli (denis.signorelli@microsoft.com)
 
-    .REQUIREMENTS: 
+	.REQUIREMENTS
     
-    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. 
-        You can install manually using: Install-Module -Name ExchangeOnlineManagement. 
-        If you don't install EXO v2 manually, the will install it automatically for you.
+    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. You can 
+    	install manually using: Install-Module -Name ExchangeOnlineManagement. If you 
+	don't install EXO v2 manually, the script will install it automatically for you.
 
     2 - To make things easier, run this script from Exchange On-Premises machine powershell, 
         the script will automatically import the Exchange On-Prem module. If you don't want 
@@ -17,7 +17,7 @@
         and enter the FQDN of an Exchange Server. You will be prompted to sign-in, use the same 
         credential that you are already logged in your domain machine
 
-	.PARAMETES: 
+	.PARAMETER:
 
     -AdminUPN 
         Mandatory parameter used to connec to to Exchange Online. Only the UPN is 
