@@ -5,11 +5,11 @@
 	Date: 2021.01.22
 	Authors: Denis Vilaca Signorelli (denis.signorelli@microsoft.com)
 
-	.REQUIREMENTS
+    .REQUIREMENTS: 
     
-    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. You can 
-    	install manually using: Install-Module -Name ExchangeOnlineManagement. If you 
-	don't install EXO v2 manually, the script will install it automatically for you.
+    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. 
+        You can install manually using: Install-Module -Name ExchangeOnlineManagement. 
+        If you don't install EXO v2 manually, the will install it automatically for you.
 
     2 - To make things easier, run this script from Exchange On-Premises machine powershell, 
         the script will automatically import the Exchange On-Prem module. If you don't want 
@@ -17,7 +17,7 @@
         and enter the FQDN of an Exchange Server. You will be prompted to sign-in, use the same 
         credential that you are already logged in your domain machine
 
-	.PARAMETER:
+	.PARAMETES: 
 
     -AdminUPN 
         Mandatory parameter used to connec to to Exchange Online. Only the UPN is 
@@ -129,7 +129,7 @@ $TargetDomain = "@$TargetDomain"
 # Check if EXO v2 is installed, if not check if the powershell is RunAs admin
 if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
     
-    Write-Host "Exchange Online Module v2 already exists"
+    Write-Host "$(Get-Date) - Exchange Online Module v2 already exists" -ForegroundColor Green
 
 } else {
 
@@ -138,25 +138,25 @@ if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
 
     if ($RunAs -like 'False') {
 
-        Write-Host 'Administrator rights are required to install modules. RunAs Administrator and then run the script'
+        Write-Host "$(Get-Date) - Administrator rights are required to install modules. RunAs Administrator and then run the script" -ForegroundColor Green
         Exit
 
     } else {
 
         #User consent to install EXO v2 Module, if not stop the script
-        $title    = 'Exchange Online Module v2 Installation'
-        $question = 'Do you want to proceed with the module installation?'
+        $title    = Write-Host "$(Get-Date) - Exchange Online Module v2 Installation" -ForegroundColor Green
+        $question = Write-Host "Do you want to proceed with the module installation?" -ForegroundColor Green
         $choices  = '&Yes', '&No'
         $decision = $Host.UI.PromptForChoice($title, $question, $choices, 1)
 
         if ($decision -eq 0) {
         
-            Write-Host 'Installing...'
+            Write-Host "$(Get-Date) - Installing..." -ForegroundColor Green
             Install-Module ExchangeOnlineManagement -AllowClobber -Confirm:$False -Force
 
         } else {
         
-            Write-Host 'We cannot proceed without EXO v2 module'
+            Write-Host "$(Get-Date) - We cannot proceed without EXO v2 module" -ForegroundColor Green
             Exit
 
         }
@@ -166,13 +166,13 @@ if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
 }
 
 
-
 # Connecto to Exchange and AD
 if ( $LocalMachineIsNotExchange.IsPresent )
 {
-    $Credentials = Get-Credential -Message "Enter your Exchange admin credentials"
+    Write-Host "$(Get-Date) - Loading AD Module and Exchange Server Module" -ForegroundColor Green
+    $Credentials = Get-Credential -Message "Enter your Exchange admin credentials. It should be the same that you are logged in the current machine"
     $ExOPSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$ExchangeHostname/PowerShell/ -Authentication Kerberos -Credential $Credentials
-    Import-PSSession $ExOPSession -AllowClobber
+    Import-PSSession $ExOPSession -AllowClobber 
 
     #Load remote AD module from the DC where the local PC is authenticated
     function Get-ModuleAD() {
@@ -198,13 +198,15 @@ if ( $LocalMachineIsNotExchange.IsPresent )
 
 # Save all properties from MEU object to variable
 $RemoteMailboxes = Get-RemoteMailbox -resultsize unlimited | Where-Object {$_.$CustomAttribute -like $CustomAttributeValue}
+Write-Host "$(Get-Date) - $($RemoteMailboxes.Count) mailboxes with $($CustomAttribute) as $($CustomAttributeValue) were returned" -ForegroundColor Green
+
 
 # Remove Exchange On-Prem PSSession in order to connect later to EXO PSSession
 $ClearSession = Get-PSSession | Remove-PSSession
 
 # Connect specifying username, if you already have authenticated 
 # to another moduel, you actually do not have to authenticate
-Connect-ExchangeOnline -UserPrincipalName $AdminUPN -ShowProgress $true
+Connect-ExchangeOnline -UserPrincipalName $AdminUPN -ShowProgress:$True -ShowBanner:$False
 
 # This will make sure when you need to reauthenticate after 1 hour 
 # that it uses existing token and you don't have to write password
@@ -214,7 +216,7 @@ Foreach ($i in $RemoteMailboxes)
 { 
  	$user = get-Recipient $i.alias 
  	$object = New-Object System.Object 
- 	$object | Add-Member -type NoteProperty -name primarysmtpaddress -value $i.PrimarySMTPAddress 
+    $object | Add-Member -type NoteProperty -name primarysmtpaddress -value $i.PrimarySMTPAddress 
  	$object | Add-Member -type NoteProperty -name alias -value $i.alias 
  	$object | Add-Member -type NoteProperty -name FirstName -value $User.FirstName 
  	$object | Add-Member -type NoteProperty -name LastName -value $User.LastName 
@@ -222,12 +224,13 @@ Foreach ($i in $RemoteMailboxes)
  	$object | Add-Member -type NoteProperty -name Name -value $i.Name 
  	$object | Add-Member -type NoteProperty -name SamAccountName -value $i.SamAccountName 
  	$object | Add-Member -type NoteProperty -name legacyExchangeDN -value $i.legacyExchangeDN 
- 	$object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
- 	$object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
+    $object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
+    $object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
     
 
-    # Save all properties from EXO object to variable
-    $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed
+    # Save necessary properties from EXO object to variable
+    Write-Host "$(Get-Date) Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
+    $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
 
     # Get mailbox guid from EXO because if the mailbox was created from scratch 
     # on EXO, the ExchangeGuid would not write-back to On-Premises this value
@@ -327,6 +330,7 @@ Foreach ($i in $RemoteMailboxes)
 } 
 
 # Export to a CSV and clear up variables and sessions
+Write-Host "$(Get-Date) - Saving CSV on $($outfile)" -ForegroundColor Green
 $outArray | Export-CSV $outfile -notypeinformation
 Remove-Variable * -ErrorAction SilentlyContinue
 $ClearSession
