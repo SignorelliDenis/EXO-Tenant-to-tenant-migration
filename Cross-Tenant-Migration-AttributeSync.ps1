@@ -224,7 +224,7 @@ Foreach ($i in $RemoteMailboxes)
  	$object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
     
     # Save necessary properties from EXO object to variable
-    Write-Host "$(Get-Date) Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
+    Write-Host "$(Get-Date) - Getting EXO mailboxes' necessary attributes. This may take some time..." -ForegroundColor Green
     $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
 
     # Get mailbox guid from EXO because if the mailbox was created from scratch 
