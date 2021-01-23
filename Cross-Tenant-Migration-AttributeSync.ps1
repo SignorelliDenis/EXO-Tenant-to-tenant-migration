@@ -72,7 +72,6 @@
 
 #>
 
-
 # Define Parameters
 [CmdletBinding(DefaultParameterSetName="Default")]
 Param(
@@ -165,7 +164,6 @@ if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
 
 }
 
-
 # Connecto to Exchange and AD
 if ( $LocalMachineIsNotExchange.IsPresent )
 {
@@ -195,11 +193,9 @@ if ( $LocalMachineIsNotExchange.IsPresent )
     Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; 
 }
 
-
 # Save all properties from MEU object to variable
 $RemoteMailboxes = Get-RemoteMailbox -resultsize unlimited | Where-Object {$_.$CustomAttribute -like $CustomAttributeValue}
 Write-Host "$(Get-Date) - $($RemoteMailboxes.Count) mailboxes with $($CustomAttribute) as $($CustomAttributeValue) were returned" -ForegroundColor Green
-
 
 # Remove Exchange On-Prem PSSession in order to connect later to EXO PSSession
 $ClearSession = Get-PSSession | Remove-PSSession
@@ -216,7 +212,7 @@ Foreach ($i in $RemoteMailboxes)
 { 
  	$user = get-Recipient $i.alias 
  	$object = New-Object System.Object 
-    $object | Add-Member -type NoteProperty -name primarysmtpaddress -value $i.PrimarySMTPAddress 
+ 	$object | Add-Member -type NoteProperty -name primarysmtpaddress -value $i.PrimarySMTPAddress 
  	$object | Add-Member -type NoteProperty -name alias -value $i.alias 
  	$object | Add-Member -type NoteProperty -name FirstName -value $User.FirstName 
  	$object | Add-Member -type NoteProperty -name LastName -value $User.LastName 
@@ -224,10 +220,9 @@ Foreach ($i in $RemoteMailboxes)
  	$object | Add-Member -type NoteProperty -name Name -value $i.Name 
  	$object | Add-Member -type NoteProperty -name SamAccountName -value $i.SamAccountName 
  	$object | Add-Member -type NoteProperty -name legacyExchangeDN -value $i.legacyExchangeDN 
-    $object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
-    $object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
+ 	$object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
+ 	$object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
     
-
     # Save necessary properties from EXO object to variable
     Write-Host "$(Get-Date) Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
     $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
