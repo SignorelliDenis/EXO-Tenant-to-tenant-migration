@@ -179,7 +179,7 @@ if ( $LocalMachineIsNotExchange.IsPresent ) {
     Write-Host "$(Get-Date) - Loading AD Module and Exchange Server Module" -ForegroundColor Green
     $Credentials = Get-Credential -Message "Enter your Exchange admin credentials. It should be the same that you are logged in the current machine"
     $ExOPSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$ExchangeHostname/PowerShell/ -Authentication Kerberos -Credential $Credentials
-    Import-PSSession $ExOPSession -AllowClobber -DisableNameChecking
+    Import-PSSession $ExOPSession -AllowClobber -DisableNameChecking | Out-Null
 
     # Connect to AD
     $sessionAD = New-PSSession -ComputerName $env:LogOnServer.Replace("\\","")
