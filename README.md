@@ -46,5 +46,5 @@ The first script will dump to a CSV the following attributes:
 
 ²The script doesn’t really dump MailboxLocations to a CSV but it dumps the UserDisplayName from any users that might have an Auto-Expanding archive mailbox to a TXT. This is not a requirement for the migration itself, but as Microsoft doesn’t support the Auto-Expanding archive mailbox migration the script dumps it to make you aware of. 
 
->[!Note] 
-> This sample script is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.
+    >[!Note]
+    > This sample script is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.
