@@ -66,7 +66,7 @@ The first script will dump to a CSV the following attributes:
 | ExchangeHostname                        | Exchange server hostname that the script will connect to. | Required² |
 ||||
     
-¹The Auto-Expanding archive is verified because Microsoft doesn't support the move-mailbox of auxiliar Auto-Expanding archive mailbox, thus the script will dump all mailboxes that has it to a TXT file. Be aware that this check might increase the script duration.
+¹The Auto-Expanding archive is verified because move-mailbox of auxiliar Auto-Expanding archive mailbox is not supported, you can see the [official article for more details](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration?view=o365-worldwide#known-issues). Thus, the script will dump all mailboxes that have auxiliar Auto-Expanding archive mailbox to a TXT file. Be aware that this check might increase the script duration.
 
 ²Required only if -LocalMachineIsNotExchange is used.
 
