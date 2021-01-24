@@ -72,6 +72,7 @@
 
 #>
 
+
 # Define Parameters
 [CmdletBinding(DefaultParameterSetName="Default")]
 Param(
@@ -97,6 +98,12 @@ Param(
     [string]$TargetDomain,
     
     [Parameter(Mandatory=$false,
+    HelpMessage="The script will check if you have auto-expanded archive enable on organization
+    level, if yes each mailbox will be check if there is an auto-expanded archive mailbox
+    This check might increase the script duration. You can opt-out using this switch")]
+    [switch]$BypassAutoExpandArchiveCheck,
+
+    [Parameter(Mandatory=$false,
     HelpMessage="Enter a custom output path for the csv. if no value is defined it will save on Desktop")]
     [string]$Path,
     
@@ -112,11 +119,13 @@ Param(
 if ( $Path -ne '' ) 
 { 
 
-$outFile = "$path\UserListToImport.csv" 
+$outFile = "$path\UserListToImport.csv"
+$AUXFile = "$path\AUXEnable-Mailboxes.txt"
 
 } else {
 
 $outFile = "$home\desktop\UserListToImport.csv"
+$AUXFile = "$home\desktop\AUXEnable-Mailboxes.txt"
 
 }
 
@@ -164,41 +173,59 @@ if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
 
 }
 
-# Connecto to Exchange and AD
-if ( $LocalMachineIsNotExchange.IsPresent )
-{
+if ( $LocalMachineIsNotExchange.IsPresent ) {
+
+    # Connect to Exchange
     Write-Host "$(Get-Date) - Loading AD Module and Exchange Server Module" -ForegroundColor Green
     $Credentials = Get-Credential -Message "Enter your Exchange admin credentials. It should be the same that you are logged in the current machine"
     $ExOPSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$ExchangeHostname/PowerShell/ -Authentication Kerberos -Credential $Credentials
-    Import-PSSession $ExOPSession -AllowClobber 
+    Import-PSSession $ExOPSession -AllowClobber -DisableNameChecking
 
-    #Load remote AD module from the DC where the local PC is authenticated
-    function Get-ModuleAD() {
-    If ((Get-Module -Name RemAD | Measure-Object).Count -lt 1) {
-        # Adding Active Directory connection and remap all commands to "RemAD": E.g.: Get-RemADUser
-        If ((Get-Module -ListAvailable -Name RemAD | Measure-Object).Count -lt 1) {
-            $sessionAD = New-PSSession -ComputerName $env:LogOnServer.Replace("\\","")
-            Invoke-Command { Import-Module ActiveDirectory } -Session $sessionAD
-            Export-PSSession -Session $sessionAD -CommandName *-AD* -OutputModule RemAD -AllowClobber -Force | Out-Null
-            Remove-PSSession -Session $sessionAD
-        } Else { Write-Output "Active Directory Module was exported" }
- 
-        #Create copy of the module on the local computer
-        Import-Module RemAD -Prefix Rem -DisableNameChecking
+    # Connect to AD
+    $sessionAD = New-PSSession -ComputerName $env:LogOnServer.Replace("\\","")
+    Invoke-Command { Import-Module ActiveDirectory } -Session $sessionAD
+    Export-PSSession -Session $sessionAD -CommandName *-AD* -OutputModule RemoteAD -AllowClobber -Force | Out-Null
+    Remove-PSSession -Session $sessionAD
+            
+    try {
+        
+        # Create copy of the module on the local computer
+        Import-Module RemoteAD -Prefix Remote -DisableNameChecking -ErrorAction Stop 
+        
+    } catch { 
+        
+        # Sometimes the following path is not registered as system variable for PS modules path, thus we catch explicitly the .psm1
+        Import-Module "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\RemoteAD\RemoteAD.psm1" -Prefix Remote -DisableNameChecking
+              
+    } finally {
+
+        If (Get-Module -Name RemoteAD) {
+
+            Write-Host "$(Get-Date) - AD Module was succesfully installed." -ForegroundColor Green
+                
+        } else {
+                
+            Write-Host "$(Get-Date) - AD module failed to load. Please run the script from an Exchange Server." -ForegroundColor Green 
+            Exit
+
+        }
+
     }
-}
 
 } else {
 
     Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; 
+
 }
+
 
 # Save all properties from MEU object to variable
 $RemoteMailboxes = Get-RemoteMailbox -resultsize unlimited | Where-Object {$_.$CustomAttribute -like $CustomAttributeValue}
 Write-Host "$(Get-Date) - $($RemoteMailboxes.Count) mailboxes with $($CustomAttribute) as $($CustomAttributeValue) were returned" -ForegroundColor Green
 
+
 # Remove Exchange On-Prem PSSession in order to connect later to EXO PSSession
-$ClearSession = Get-PSSession | Remove-PSSession
+Get-PSSession | Remove-PSSession
 
 # Connect specifying username, if you already have authenticated 
 # to another moduel, you actually do not have to authenticate
@@ -207,6 +234,27 @@ Connect-ExchangeOnline -UserPrincipalName $AdminUPN -ShowProgress:$True -ShowBan
 # This will make sure when you need to reauthenticate after 1 hour 
 # that it uses existing token and you don't have to write password
 $global:UserPrincipalName=$AdminUPN
+
+# Saving AUX org status if bypass switch is not present
+if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+
+    Write-Host "$(Get-Date) - Bypassing Auto-Expand archive check" -ForegroundColor Green
+
+} else {
+
+    $OrgAUXStatus = Get-OrganizationConfig | Select-Object AutoExpandingArchiveEnabled
+
+    if ( $OrgAUXStatus.AutoExpandingArchiveEnabled -eq '$True' ) {
+
+        Write-Host "$(Get-Date) - Auto-Expand archive is enabled at organization level" -ForegroundColor Green
+
+    } else {
+
+        Write-Host "$(Get-Date) - Auto-Expand archive is not enabled at organization level, but we will check each mailbox" -ForegroundColor Green
+
+    }
+    
+}
 
 Foreach ($i in $RemoteMailboxes)  
 { 
@@ -223,9 +271,46 @@ Foreach ($i in $RemoteMailboxes)
  	$object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
  	$object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
     
-    # Save necessary properties from EXO object to variable
-    Write-Host "$(Get-Date) - Getting EXO mailboxes' necessary attributes. This may take some time..." -ForegroundColor Green
-    $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
+    if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+    
+        # Save necessary properties from EXO object to variable avoiding AUX check
+        Write-Host "$(Get-Date) - Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
+        $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
+    
+    } else {
+
+        if ($OrgAUXStatus.AutoExpandingArchiveEnabled -eq '$True') {
+
+            # If AUX is enable at org side, doesn't metter if the mailbox has it explicitly enabled
+            $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets All | Select-Object ExchangeGuid,MailboxLocations,LitigationHoldEnabled,SingleItemRecoveryEnabled,ArchiveDatabase,ArchiveGuid
+
+        } else {
+
+            # If AUX isn't enable at org side, we check if the mailbox has it explicitly enabled
+            $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets All | Select-Object ExchangeGuid,MailboxLocations,LitigationHoldEnabled,SingleItemRecoveryEnabled,ArchiveDatabase,ArchiveGuid,AutoExpandingArchiveEnabled
+        
+        }
+
+    }
+
+    if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+    
+        # Save necessary properties from EXO object to variable avoiding AUX check
+        Write-Host "$(Get-Date) - Bypassing MailboxLocation check for Auto-Expand archive" -ForegroundColor Green
+
+    } else {
+
+        # AUX enabled doesn't mean that the mailbox indeed have AUX
+        # archive. We need to check the MailboxLocation to be sure
+        if ( ($OrgAUXStatus.AutoExpandingArchiveEnabled -eq '$True' -and $EXOMailbox.MailboxLocations -like '*;AuxArchive;*') -or 
+        ($OrgAUXStatus.AutoExpandingArchiveEnabled -eq '$False' -and $EXOMailbox.AutoExpandingArchiveEnabled -eq '$True' -and 
+        $EXOMailbox.MailboxLocations -like '*;AuxArchive;*') ) 
+        {
+
+            Write-Output "$(Get-Date) - User $($i.Alias) has an auxiliar Auto-Expanding archive mailbox. Be aware that any auxiliar archive mailbox will not be migrated" | Out-File -FilePath $AUXFile -Append
+            
+        } 
+    } 
 
     # Get mailbox guid from EXO because if the mailbox was created from scratch 
     # on EXO, the ExchangeGuid would not write-back to On-Premises this value
@@ -284,8 +369,7 @@ Foreach ($i in $RemoteMailboxes)
     {
 
         # Connect to AD exported module only if this machine isn't an Exchange   
-        Get-ModuleAD
-        $Junk = Get-RemADUser -Identity $i.SamAccountName -Properties *
+        $Junk = Get-RemoteADUser -Identity $i.SamAccountName -Properties *
     
     } else {
 
@@ -325,8 +409,18 @@ Foreach ($i in $RemoteMailboxes)
 } 
 
 # Export to a CSV and clear up variables and sessions
-Write-Host "$(Get-Date) - Saving CSV on $($outfile)" -ForegroundColor Green
+if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+    
+    Write-Host "$(Get-Date) - Saving CSV on $($outfile)" -ForegroundColor Green
+
+    } else {
+
+        Write-Host "$(Get-Date) - Saving CSV on $($outfile)" -ForegroundColor Green
+        Write-Host "$(Get-Date) - Saving TXT on $($AUXFile)" -ForegroundColor Green
+
+    }
+
 $outArray | Export-CSV $outfile -notypeinformation
 Remove-Variable * -ErrorAction SilentlyContinue
-$ClearSession
+Get-PSSession | Remove-PSSession
 
