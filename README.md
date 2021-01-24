@@ -21,7 +21,7 @@ This repository contains two scripts to sync all necessary attributes between th
 
 ## Requirement:
 
-**Commom requirements for both scripts:**
+**Common requirements for both scripts:**
 
 - Depending on the PC that the script will be running, it could require the execution policy as Unrestricted.
 
