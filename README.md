@@ -1,6 +1,6 @@
 # Exchange Online: Tenant-to-tenant migration script
 
-*This sample script is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.
+*The sample script in this repository is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.*
 
 ## Overview:
 
