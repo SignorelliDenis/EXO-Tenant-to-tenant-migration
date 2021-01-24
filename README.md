@@ -1,10 +1,10 @@
-# Exchange Online: Tenant-to-tenant migration script
+# Exchange Online: Cross-tenant migration scripts
 
 *Any sample script in this repository is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.*
 
 ## Overview:
 
-This repository contains two scripts to sync all necessary attributes between the source and target tenant before the MRS move-mailbox.
+This repository contains two scripts to sync all necessary attributes between the source and target tenant before the MRS move mailbox. Before starting using the resources provided in this repository, please review the [Microsoft official document about the cross-tenant EXO migration](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration). It’s very important that you understand how the migration works in order to use these scripts.
 
 ## How it works:
 
