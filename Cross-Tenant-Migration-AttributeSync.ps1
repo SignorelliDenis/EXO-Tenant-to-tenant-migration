@@ -98,10 +98,10 @@ Param(
     [string]$TargetDomain,
     
     [Parameter(Mandatory=$false,
-    HelpMessage="The script will check if you have auto-expanded archive enable on organization
-    level, if yes each mailbox will be check if there is an auto-expanded archive mailbox
+    HelpMessage="The script will check if you have Auto-Expanding archive enable on organization
+    level, if yes each mailbox will be check if there is an Auto-Expanding archive mailbox
     This check might increase the script duration. You can opt-out using this switch")]
-    [switch]$BypassAutoExpandArchiveCheck,
+    [switch]$BypassAutoExpandingArchiveCheck,
 
     [Parameter(Mandatory=$false,
     HelpMessage="Enter a custom output path for the csv. if no value is defined it will save on Desktop")]
@@ -236,7 +236,7 @@ Connect-ExchangeOnline -UserPrincipalName $AdminUPN -ShowProgress:$True -ShowBan
 $global:UserPrincipalName=$AdminUPN
 
 # Saving AUX org status if bypass switch is not present
-if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
 
     Write-Host "$(Get-Date) - Bypassing Auto-Expand archive check" -ForegroundColor Green
 
@@ -271,7 +271,7 @@ Foreach ($i in $RemoteMailboxes)
  	$object | Add-Member -type NoteProperty -name CustomAttribute -value $CustomAttribute    
  	$object | Add-Member -type NoteProperty -name CustomAttributeValue -value $CustomAttributeValue
     
-    if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+    if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
     
         # Save necessary properties from EXO object to variable avoiding AUX check
         Write-Host "$(Get-Date) - Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
@@ -293,7 +293,7 @@ Foreach ($i in $RemoteMailboxes)
 
     }
 
-    if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+    if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
     
         # Save necessary properties from EXO object to variable avoiding AUX check
         Write-Host "$(Get-Date) - Bypassing MailboxLocation check for Auto-Expand archive" -ForegroundColor Green
@@ -409,7 +409,7 @@ Foreach ($i in $RemoteMailboxes)
 } 
 
 # Export to a CSV and clear up variables and sessions
-if ( $BypassAutoExpandArchiveCheck.IsPresent ) {
+if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
     
     Write-Host "$(Get-Date) - Saving CSV on $($outfile)" -ForegroundColor Green
 
