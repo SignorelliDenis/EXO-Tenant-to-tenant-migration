@@ -1,10 +1,12 @@
 # Exchange Online: Tenant-to-tenant migration script
 
-**Overview:**
+*This sample script is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.
+
+## Overview:
 
 This repository contains two scripts to sync of all necessary attributes between the source and target tenant before the MRS move-mailbox.
 
-**How it works:**
+## How it works:
 
 - 1 Fill some Exchange custom attributes (1-15) with any value. This will become the filter for the script to get only mailboxes with the attribute that you choose.
 
@@ -16,7 +18,7 @@ This repository contains two scripts to sync of all necessary attributes between
 
 - 5 Re-enable the Azure AD Connect sync cycle manually – the script will not do this for you but will provide you the cmdlet to do when you are ready. 
 
-**Attributes:**
+## Attributes:
 
 The first script will dump to a CSV the following attributes:
 
@@ -46,5 +48,3 @@ The first script will dump to a CSV the following attributes:
 
 ²The script doesn’t really dump MailboxLocations to a CSV but it dumps the UserDisplayName from any users that might have an Auto-Expanding archive mailbox to a TXT. This is not a requirement for the migration itself, but as Microsoft doesn’t support the Auto-Expanding archive mailbox migration the script dumps it to make you aware of. 
 
-    >[!Note]
-    > This sample script is provided AS IS and not supported under any Microsoft standard support program, service and without warranty of any kind.
