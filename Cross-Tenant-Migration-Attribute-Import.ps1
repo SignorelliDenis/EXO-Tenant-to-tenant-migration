@@ -285,7 +285,7 @@ foreach ($user in $ImportUserList)
 
     } else {
 
-        #Add alll proxyaddresses and ECP value
+        #Add alll proxyaddresses and ELC value
         Set-ADUser -Identity $user.SamAccountName -add @{ProxyAddresses=$proxy -split ","} -Replace @{msExchELCMailboxFlags=$user.ELCValue}
 
     }    
