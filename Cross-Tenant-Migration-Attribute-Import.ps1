@@ -1,3 +1,4 @@
+
 <#
 	Title: Cross-Tenant-Migration-Attribute-Import.ps1
 	Version: 0.1
@@ -319,16 +320,16 @@ foreach ($user in $ImportUserList)
                 $BytelistSafeSender.Add($HexByteSafeSender)
             }
         
-        $UserInstance.msExchSafeSendersHash = $BytelistSafeSender.ToArray()
+        $BytelistSafeSenderArray = $BytelistSafeSender.ToArray()
         
             if ( $LocalMachineIsNotExchange.IsPresent )
             {
                 
-            Set-RemoteADUser -instance $UserInstance
+                Set-RemoteADUser -Identity $user.SamAccountName -Replace @{ msExchSafeSendersHash = $BytelistSafeSenderArray }
 
             } else {
 
-                Set-ADUser -instance $UserInstance
+                Set-ADUser -Identity $user.SamAccountName -Replace @{ msExchSafeSendersHash = $BytelistSafeSenderArray }
 
             }   
           
@@ -345,16 +346,16 @@ foreach ($user in $ImportUserList)
                 $BytelistSafeRecipient.Add($HexByteSafeRecipient)
             }
         
-        $UserInstance.msExchSafeRecipientsHash = $BytelistSafeRecipient.ToArray()
+        $BytelistSafeRecipientArray = $BytelistSafeRecipient.ToArray()
         
             if ( $LocalMachineIsNotExchange.IsPresent )
             {
                 
-                Set-RemoteADUser -instance $UserInstance
+                Set-RemoteADUser -Identity $user.SamAccountName -Replace @{ msExchSafeRecipientsHash = $BytelistSafeRecipientArray }
 
             } else {
 
-                Set-ADUser -instance $UserInstance
+                Set-ADUser -Identity $user.SamAccountName -Replace @{ msExchSafeRecipientsHash = $BytelistSafeRecipientArray }
 
             }  
        
@@ -371,16 +372,16 @@ foreach ($user in $ImportUserList)
                 $BytelistBlockedSender.Add($HexByteBlockedSender)
             }
         
-        $UserInstance.msExchBlockedSendersHash = $BytelistBlockedSender.ToArray()
+        $BytelistBlockedSenderArray = $BytelistBlockedSender.ToArray()
         
             if ( $LocalMachineIsNotExchange.IsPresent )
             {
                 
-                Set-RemoteADUser -instance $UserInstance
+                Set-RemoteADUser -Identity $user.SamAccountName -Replace @{ msExchBlockedSendersHash = $BytelistBlockedSenderArray }
 
             } else {
 
-                Set-ADUser -instance $UserInstance
+                Set-ADUser -Identity $user.SamAccountName -Replace @{ msExchBlockedSendersHash = $BytelistBlockedSenderArray }
 
             }  
        
