@@ -42,7 +42,7 @@ This repository contains two scripts to sync all necessary attributes between th
 
 ## Parameters:
 
-###Cross-Tenant-Migration-Attribute-Export.ps1
+**Cross-Tenant-Migration-Attribute-Export.ps1**
 
 | Parameter | Value | Required or Optional
 |-----------------------------------------|-------------------------|---------------|
@@ -61,7 +61,7 @@ This repository contains two scripts to sync all necessary attributes between th
 
 ² Required only if -LocalMachineIsNotExchange is used.
 
-###Cross-Tenant-Migration-Attribute-Import.ps1
+**Cross-Tenant-Migration-Attribute-Import.ps1**
 
 | Parameter | Value | Required or Optional
 |-----------------------------------------|-------------------------|---------------|
