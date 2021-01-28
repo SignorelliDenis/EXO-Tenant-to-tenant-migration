@@ -278,10 +278,6 @@ foreach ($user in $ImportUserList)
     if ( $LocalMachineIsNotExchange.IsPresent )
     {
         
-        # Used later because the "-Instance" parameter requires an explicit 
-        # search and cannot accept the samAccountName from the CSV 
-        $UserInstance = Get-RemoteADUser -Identity $user.SamAccountName
-
         # Add all proxyAddresses and ELC value 
         $ProxyArray = @()
         $ProxyArray = $Proxy -split ","
@@ -289,10 +285,6 @@ foreach ($user in $ImportUserList)
 
     } else {
 
-        # Used later because the "-Instance" parameter requires an explicit 
-        # search and cannot accept the samAccountName from the CSV 
-        $UserInstance = Get-ADUser -Identity $user.SamAccountName
-        
         #Add alll proxyaddresses and ECP value
         Set-ADUser -Identity $user.SamAccountName -add @{ProxyAddresses=$proxy -split ","} -Replace @{msExchELCMailboxFlags=$user.ELCValue}
 
@@ -390,3 +382,4 @@ foreach ($user in $ImportUserList)
 }
 
 Write-Host "$(Get-Date) - The import was finished. Please confirm that all users are correctly created before start the Azure AD Connect sync " -ForegroundColor Green
+
