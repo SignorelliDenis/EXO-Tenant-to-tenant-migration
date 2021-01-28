@@ -184,6 +184,7 @@ if ( $LocalMachineIsNotExchange.IsPresent ) {
     # Connect to AD
     $sessionAD = New-PSSession -ComputerName $env:LogOnServer.Replace("\\","")
     Invoke-Command { Import-Module ActiveDirectory } -Session $sessionAD
+    # TO DO: Use try/catch to Inkove command, user might be used a wrong password so we can prompt it for a second time. 
     Export-PSSession -Session $sessionAD -CommandName *-AD* -OutputModule RemoteAD -AllowClobber -Force | Out-Null
     Remove-PSSession -Session $sessionAD
             
@@ -222,7 +223,6 @@ if ( $LocalMachineIsNotExchange.IsPresent ) {
 # Save all properties from MEU object to variable
 $RemoteMailboxes = Get-RemoteMailbox -resultsize unlimited | Where-Object {$_.$CustomAttribute -like $CustomAttributeValue}
 Write-Host "$(Get-Date) - $($RemoteMailboxes.Count) mailboxes with $($CustomAttribute) as $($CustomAttributeValue) were returned" -ForegroundColor Green
-
 
 # Remove Exchange On-Prem PSSession in order to connect later to EXO PSSession
 Get-PSSession | Remove-PSSession
@@ -331,6 +331,10 @@ Foreach ($i in $RemoteMailboxes)
         
         $object | Add-Member -type NoteProperty -name ArchiveGuid -value $EXOMailbox.ArchiveGuid
     
+    } else {
+
+        $object | Add-Member -type NoteProperty -name ArchiveGuid -value $Null
+
     }
 
     # Get any SMTP alias avoiding *.onmicrosoft
@@ -385,6 +389,11 @@ Foreach ($i in $RemoteMailboxes)
         $SafeSender = [System.BitConverter]::ToString($junk.msExchSafeSendersHash)
         $Safesender = $SafeSender.Replace("-","")
         $object | Add-Member -type NoteProperty -name SafeSender -value $SafeSender
+
+    } else {
+
+        $object | Add-Member -type NoteProperty -name SafeSender $Null
+
     }
     
     if ( $null -ne $junk.msExchSafeRecipientsHash -and
@@ -394,6 +403,10 @@ Foreach ($i in $RemoteMailboxes)
         $SafeRecipient = $SafeRecipient.Replace("-","")
         $object | Add-Member -type NoteProperty -name SafeRecipient -value $SafeRecipient 
 
+    }  else {
+
+        $object | Add-Member -type NoteProperty -name SafeRecipient -value $Null
+
     }
 
     if ( $null -ne $junk.msExchBlockedSendersHash -and
@@ -402,6 +415,10 @@ Foreach ($i in $RemoteMailboxes)
         $BlockedSender = [System.BitConverter]::ToString($junk.msExchBlockedSendersHash)
         $BlockedSender = $BlockedSender.Replace("-","")
         $object | Add-Member -type NoteProperty -name BlockedSender -value $BlockedSender
+    } else {
+
+        $object | Add-Member -type NoteProperty -name BlockedSender -value $Null
+
     }
 
 
