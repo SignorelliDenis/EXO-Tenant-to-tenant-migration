@@ -1,6 +1,6 @@
 
 <#
-	Title: Cross-Tenant-Migration-AttributeSync.ps1
+	Title: Cross-Tenant-Migration-Attribute-Export.ps1
 	Version: 0.1
 	Date: 2021.01.22
 	Authors: Denis Vilaca Signorelli (denis.signorelli@microsoft.com)
