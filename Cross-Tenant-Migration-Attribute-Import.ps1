@@ -246,7 +246,7 @@ for ($i=0; $i -lt $pwstr.Length; $i++) {$pw.AppendChar($pwstr[$i])}
 foreach ($user in $ImportUserList) 
 { 
     
-    #Write-Progress -Activity "Creating MEU objects and importing attributes from CSV" -Status "Working on $($user.DisplayName)" -PercentComplete ($i/$ImportUserList.Count*100)
+    #TO DO: Write-Progress -Activity "Creating MEU objects and importing attributes from CSV" -Status "Working on $($user.DisplayName)" -PercentComplete ($i/$ImportUserList.Count*100)
     
     $tmpUser = $null
      	
@@ -299,8 +299,7 @@ foreach ($user in $ImportUserList)
     
     }
 
-    # If the user has Junk hash, convert the HEX string
-    # to byte array and set it using instance variable
+    # If the user has Junk hash, convert the HEX string to byte array and set it
     if ( $null -ne $user.SafeSender -and $user.SafeSender -ne '' ) 
     {
     
