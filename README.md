@@ -23,7 +23,7 @@ This repository contains two scripts to sync all necessary attributes between th
 
 **Common requirements for both scripts:**
 
-- Depending on the current powershell execution policy stateg, it could require to be set as Unrestricted.
+- Depending on the current powershell execution policy state, it could require to be set as Unrestricted.
 
 - You need Active Directory and Exchange Server On-Premises. In other words, the script was not developed to work in Azure AD cloud-only scenarios or with AD On-Premises in hybrid but with no Exchange On-Premises. 
 
