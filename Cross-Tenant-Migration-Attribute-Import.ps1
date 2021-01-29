@@ -269,7 +269,7 @@ foreach ($user in $ImportUserList)
     $x500 = "x500:" + $user.legacyExchangeDN 
     $proxy = $user.EmailAddresses.Replace(";",",") 
     
-    #Add CustomAtrribute parameter as hashtable to match the variable to parameter's name
+    # Matching the variable's name to the parameter's name
     $CustomAttributeParam = @{ $User.CustomAttribute = $user.CustomAttributeValue }
     
     # Set ExchangeGuid, all previous ProxyAddress values and CustomAttribute
