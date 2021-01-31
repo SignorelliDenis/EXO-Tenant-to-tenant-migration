@@ -1,15 +1,15 @@
 
 <#
 	Title: Cross-Tenant-Migration-Attribute-Export.ps1
-	Version: 0.1
+	Version: 0.2
 	Date: 2021.01.22
 	Authors: Denis Vilaca Signorelli (denis.signorelli@microsoft.com)
 
     .REQUIREMENTS: 
     
-    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. 
-        You can install manually using: Install-Module -Name ExchangeOnlineManagement. 
-        If you don't install EXO v2 manually, the will install it automatically for you.
+    1 - ExchangeOnlineManagement module (EXO v2) is required to run this script. You can 
+        install manually using: Install-Module -Name ExchangeOnlineManagement. If you 
+        don't install EXO v2 manually, the script will install it automatically for you.
 
     2 - To make things easier, run this script from Exchange On-Premises machine powershell, 
         the script will automatically import the Exchange On-Prem module. If you don't want 
@@ -20,7 +20,7 @@
 	.PARAMETES: 
 
     -AdminUPN 
-        Mandatory parameter used to connec to to Exchange Online. Only the UPN is 
+        Mandatory parameter used to connect to Exchange Online. Only the UPN is 
         stored to avoid token expiration during the session, no password is stored.
 
     -CustomAttributeNumber 
@@ -31,13 +31,14 @@
         Mandatory parameter used to inform the code which value will be used to 
         scope the search
 
-    -SourceDomain 
-        Mandatory parameter used to replace the source SMTP domain to the target SMTP 
-        domain in the CSV. These values are not replaced on the object itself, only in the CSV. 
-
-    -TargetDomain 
-        Mandatory parameter used to replace the source SMTP domain to the target SMTP domain 
-        in the CSV. These values are not replaced in the object itself, only in the CSV.  
+    -DomainMappingCSV 
+        Mandatory parameter used to import a CSV that map which source domain will become which 
+        target domain. If the CSV file is in the same paht as the script, just enter the CSV file name.
+        Within the CSV file, add "source,target" as header and then all source and target domains, e.g.:
+        source,target
+        contoso.com,fabrikam.com
+        source1.com,target1.com
+        sub.source.com,sub.target.com
 
     -Path
         Optional parameter used to inform which path will be used to save the CSV. 
@@ -90,12 +91,8 @@ Param(
     [string]$CustomAttributeValue,
     
     [Parameter(Mandatory=$true,
-    HelpMessage="Enter the SOURCE domain. E.g. contoso.com")]
-    [string]$SourceDomain,
-    
-    [Parameter(Mandatory=$true,
-    HelpMessage="Enter the TARGET domain. E.g. fabrikam.com")]
-    [string]$TargetDomain,
+    HelpMessage="Enter the CSV name where you mapped the source and target domains")]
+    [string]$DomainMappingCSV,
     
     [Parameter(Mandatory=$false,
     HelpMessage="The script will check if you have Auto-Expanding archive enable on organization
@@ -131,8 +128,8 @@ $AUXFile = "$home\desktop\AUXEnable-Mailboxes.txt"
 
 $outArray = @() 
 $CustomAttribute = "CustomAttribute$CustomAttributeNumber"
-$SourceDomain = "@$SourceDomain"
-$TargetDomain = "@$TargetDomain"
+$MappingCSV = Import-CSV -Path $DomainMappingCSV
+
 
 # Check if EXO v2 is installed, if not check if the powershell is RunAs admin
 if (Get-Module -ListAvailable -Name ExchangeOnlineManagement) {
@@ -178,13 +175,13 @@ if ( $LocalMachineIsNotExchange.IsPresent ) {
     # Connect to Exchange
     Write-Host "$(Get-Date) - Loading AD Module and Exchange Server Module" -ForegroundColor Green
     $Credentials = Get-Credential -Message "Enter your Exchange admin credentials. It should be the same that you are logged in the current machine"
-    $ExOPSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$ExchangeHostname/PowerShell/ -Authentication Kerberos -Credential $Credentials
-    Import-PSSession $ExOPSession -AllowClobber -DisableNameChecking | Out-Null
+    $ExPSession = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$ExchangeHostname/PowerShell/ -Authentication Kerberos -Credential $Credentials
+    # TO DO: Use try/catch to Inkove command, user might be used a wrong password so we can prompt it for a second time. 
+    Import-PSSession $ExPSession -AllowClobber -DisableNameChecking | Out-Null
 
     # Connect to AD
     $sessionAD = New-PSSession -ComputerName $env:LogOnServer.Replace("\\","")
     Invoke-Command { Import-Module ActiveDirectory } -Session $sessionAD
-    # TO DO: Use try/catch to Inkove command, user might be used a wrong password so we can prompt it for a second time. 
     Export-PSSession -Session $sessionAD -CommandName *-AD* -OutputModule RemoteAD -AllowClobber -Force | Out-Null
     Remove-PSSession -Session $sessionAD
             
@@ -256,6 +253,7 @@ if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
     
 }
 
+Write-Host "$(Get-Date) - Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
 Foreach ($i in $RemoteMailboxes)  
 { 
  	$user = get-Recipient $i.alias 
@@ -274,7 +272,6 @@ Foreach ($i in $RemoteMailboxes)
     if ( $BypassAutoExpandingArchiveCheck.IsPresent ) {
     
         # Save necessary properties from EXO object to variable avoiding AUX check
-        Write-Host "$(Get-Date) - Getting EXO mailboxes necessary attributes. This may take some time..." -ForegroundColor Green
         $EXOMailbox = Get-EXOMailbox -Identity $i.Alias -PropertySets Retention,Hold,Archive,StatisticsSeed 
     
     } else {
@@ -361,8 +358,23 @@ Foreach ($i in $RemoteMailboxes)
          
     # Join it using ";" and replace the old domain (source) to the new one (target)
     $ProxyToString = [system.String]::Join(";",$ProxyArray)
-    $object | Add-Member -type NoteProperty -name EmailAddresses -value $ProxyToString.Replace($SourceDomain,$TargetDomain) 
-    #TO DO: Provide input for more source and target domains and probably mapping them bases on CSV.
+
+    # Map from the CSV which source domain will become which source domain
+    Foreach ($Domain in $MappingCSV) {
+
+        # Add @ before the domain to avoid issues with subdomains
+        $SourceDomain = $Domain.Source.Insert(0,"@")
+        $TargetDomain = $Domain.Target.Insert(0,"@")
+
+        if ($ProxyToString -match $Domain.source) {
+
+            $ProxyToString = $ProxyToString -replace $SourceDomain,$TargetDomain
+
+        }
+
+    }
+
+    $object | Add-Member -type NoteProperty -name EmailAddresses -value $ProxyToString 
 
     # Get ProxyAddress only for *.mail.onmicrosoft to define in the target AD the targetAddress value
     $TargetToString = [system.String]::Join(";",$TargetArray)
@@ -415,6 +427,7 @@ Foreach ($i in $RemoteMailboxes)
         $BlockedSender = [System.BitConverter]::ToString($junk.msExchBlockedSendersHash)
         $BlockedSender = $BlockedSender.Replace("-","")
         $object | Add-Member -type NoteProperty -name BlockedSender -value $BlockedSender
+    
     } else {
 
         $object | Add-Member -type NoteProperty -name BlockedSender -value $Null
