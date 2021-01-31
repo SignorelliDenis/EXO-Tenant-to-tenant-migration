@@ -41,7 +41,6 @@ This repository contains two scripts to sync all necessary attributes between th
     contoso.com,fabrikam.com
     source1.com,target1.com
     sub.source.com,sub.target.com
-
 - You can run the script from an Exchange Server machine or from any other domain-joined machine as long as you use the switch -LocalMachineIsNotExchange and the string -ExchangeHostname to inform which Exchange the script will open the PSSession. 
 
 - The script will connect to the Exchange Online using v2 module. If you don't have it installed, the script can install for you as long as the PC may reach the powershell gallery.  
