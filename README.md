@@ -7,6 +7,7 @@
 This repository contains two scripts to sync all necessary attributes between the source and target tenant before the MRS move mailbox. Before starting using the resources provided in this repository, please review the [Microsoft official document about the cross-tenant EXO migration](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration). It’s very important that you understand how the migration works in order to use these scripts.
 
 
+
 ## Requirement:
 
 **Common requirements for both scripts:**
@@ -14,6 +15,7 @@ This repository contains two scripts to sync all necessary attributes between th
 - Depending on the current powershell execution policy state, it could require to be set as Unrestricted.
 
 - You need Active Directory and Exchange Server On-Premises. In other words, the script was not developed to work in Azure AD cloud-only scenarios or with AD On-Premises in hybrid but with no Exchange On-Premises. 
+
 
 
 **Cross-Tenant-Migration-Attribute-Export.ps1:**
@@ -34,6 +36,7 @@ This repository contains two scripts to sync all necessary attributes between th
 - If you run the script from an Exchange Server machine, the script will leverage the local AD module present on Exchange. Otherwise, the script will export a PSSession from the Domain Controller which authenticated your PC.   
 
 
+
 **Cross-Tenant-Migration-Attribute-Import.ps1:**
 
 - The script will ask you to stop Azure AD Connect sync cycle before the execution. You can leave the script stop it for you informing the Azure AD Connect machine hostname, or you can stop yourself before the script execution.
@@ -45,6 +48,7 @@ This repository contains two scripts to sync all necessary attributes between th
 - You can run the script from an Exchange Server machine or from any other domain-joined machine as long as you use the switch -LocalMachineIsNotExchange and the string -ExchangeHostname to inform which Exchange the script will open the PSSession. 
 
 - If you run the script from an Exchange Server machine, the script will leverage the local AD module present on Exchange. Otherwise, the script will export a PSSession from the Domain Controller which authenticated your PC.   
+
 
 
 ## How it works:
@@ -60,6 +64,7 @@ This repository contains two scripts to sync all necessary attributes between th
 5 - Run the `Cross-Tenant-Migration-Attribute-Import.ps1` to create Mail User objects (aka MEU) in the target on-prem AD. 
 
 6 - Re-enable the Azure AD Connect sync cycle manually. 
+
 
 
 ## Parameters:
@@ -80,8 +85,7 @@ This repository contains two scripts to sync all necessary attributes between th
     
 ¹ The Auto-Expanding archive is verified because move-mailbox of auxiliar Auto-Expanding archive mailbox is not supported, you can see the [official article for more details](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration?view=o365-worldwide#known-issues). The script will dump all mailboxes that have auxiliar Auto-Expanding archive mailbox to a TXT file. Be aware that this check might increase the script duration.
 
-² *Required only if `-LocalMachineIsNotExchange` is used.
-
+² *Required only if `-LocalMachineIsNotExchange` is used.*
 
 Example: Running from a non-Exchange Server
 
@@ -102,8 +106,7 @@ Example: Running from a non-Exchange Server
 | ExchangeHostname                        | Exchange server hostname that the script will connect to. | Required¹ |
 ||||
 
-¹ *Required only if `-LocalMachineIsNotExchange` is used.
-
+¹ *Required only if `-LocalMachineIsNotExchange` is used.*
 
 Example: Running from an Exchange Server
 
@@ -136,9 +139,9 @@ The `Cross-Tenant-Migration-Attribute-Export.ps1` will dump to a CSV the followi
 - LitigationHoldEnabled ³
 - SingleItemRecoveryEnabled ³
 
-¹ *The custom attributes number and value that will be dumped is chosen according to the user’s input before running the script
+¹ *The custom attributes number and value that will be dumped is chosen according to the user’s input before running the script*
 
-² *The script doesn’t really dump MailboxLocations to a CSV but it dumps the UserDisplayName from any users that might have an Auto-Expanding archive mailbox to a TXT. This is not a requirement for the migration itself, but as Microsoft doesn’t support the Auto-Expanding archive mailbox migration the script dumps it to make you aware of. 
+² *The script doesn’t really dump MailboxLocations to a CSV but it dumps the UserDisplayName from any users that might have an Auto-Expanding archive mailbox to a TXT. This is not a requirement for the migration itself, but as Microsoft doesn’t support the Auto-Expanding archive mailbox migration the script dumps it to make you aware of.*
 
-³ *These properties are converted to a number which represents the ELC mailbox flag.
+³ *These properties are converted to a number which represents the ELC mailbox flag.*
 
