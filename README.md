@@ -83,9 +83,9 @@ This repository contains two scripts to sync all necessary attributes between th
 | ExchangeHostname                        | Exchange server hostname that the script will connect to. | Required² |
 ||||
     
-¹ The Auto-Expanding archive is verified because move-mailbox of auxiliar Auto-Expanding archive mailbox is not supported, you can see the [official article for more details](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration?view=o365-worldwide#known-issues). The script will dump all mailboxes that have auxiliar Auto-Expanding archive mailbox to a TXT file. Be aware that this check might increase the script duration.
+¹ *The Auto-Expanding archive is verified because move-mailbox of auxiliar Auto-Expanding archive mailbox is not supported, you can see the [official article for more details](https://docs.microsoft.com/en-us/microsoft-365/enterprise/cross-tenant-mailbox-migration?view=o365-worldwide#known-issues). The script will dump all mailboxes that have auxiliar Auto-Expanding archive mailbox to a TXT file. Be aware that this check might increase the script duration.*
 
-² *Required only if `-LocalMachineIsNotExchange` is used.*
+² *Required only if `-LocalMachineIsNotExchange` is being used.*
 
 Example: Running from a non-Exchange Server
 
@@ -106,7 +106,7 @@ Example: Running from a non-Exchange Server
 | ExchangeHostname                        | Exchange server hostname that the script will connect to. | Required¹ |
 ||||
 
-¹ *Required only if `-LocalMachineIsNotExchange` is used.*
+¹ *Required only if `-LocalMachineIsNotExchange` is being used.*
 
 Example: Running from an Exchange Server
 
